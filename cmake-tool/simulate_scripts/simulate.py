@@ -82,7 +82,7 @@ if __name__ == "__main__":
                                   args.qemu_sim_serial_opt, qemu_sim_mem_size_entry, args.qemu_sim_extra_args, qemu_sim_images_entry,
                                   qemu_gdbserver_command]
     qemu_simulate_command = " ".join(qemu_simulate_command_opts)
-    qemu_simulate_command = qemu_simulate_command + "-smp " + str(args.cpu_num)
+    qemu_simulate_command = qemu_simulate_command + " -smp " + str(args.cpu_num)
 
     notice(qemu_simulate_command)
 
