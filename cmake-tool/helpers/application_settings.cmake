@@ -10,7 +10,10 @@ cmake_minimum_required(VERSION 3.8.2)
 include_guard(GLOBAL)
 
 function(ApplyData61ElfLoaderSettings kernel_platform kernel_sel4_arch)
-    set(binary_list "tx1;hikey;odroidc2;odroidc4;imx8mq-evk;imx8mm-evk;hifive;tqma8xqp1gb;bcm2711")
+    set(
+        binary_list
+        "tx1;hikey;odroidc2;odroidc4;imx8mq-evk;imx8mm-evk;imx8mp-evk;hifive;tqma8xqp1gb;bcm2711;rocketchip;star64"
+    )
     set(efi_list "tk1;rockpro64;quartz64")
     set(uimage_list "tx2;am335x")
     if(
@@ -33,18 +36,22 @@ function(ApplyData61ElfLoaderSettings kernel_platform kernel_sel4_arch)
         set(ElfloaderMode "hypervisor" CACHE STRING "" FORCE)
         set(ElfloaderMonitorHook ON CACHE BOOL "" FORCE)
     endif()
-    if((KernelPlatformImx8mm-evk OR KernelPlatImx8mq) AND KernelSel4ArchAarch32)
+    if(
+        (KernelPlatformImx8mm-evk OR KernelPlatImx8mq OR KernelPlatformImx8mp-evk)
+        AND KernelSel4ArchAarch32
+    )
         set(ElfloaderArmV8LeaveAarch64 ON CACHE BOOL "" FORCE)
-        # This applies to imx8mm, imx8mq (EVK and MaaXBoard) when in aarch32 configuration
+        # This applies to imx8mm, imx8mq (EVK and MaaXBoard), imx8mp when in aarch32 configuration
         # It should be possible to use a uimage format but when tried nothing
         # runs after uboot.
-        set(IMAGE_START_ADDR 0x41000000 CACHE INTERNAL "" FORCE)
+        set(IMAGE_START_ADDR 0x42000000 CACHE INTERNAL "" FORCE)
     endif()
     if(KernelPlatformHikey AND KernelSel4ArchAarch32)
         # This is preserving what the Hikey's bootloader requires.
         set(IMAGE_START_ADDR 0x1000 CACHE INTERNAL "" FORCE)
     endif()
     if(KernelPlatformZynqmp AND KernelSel4ArchAarch32)
+        set(ElfloaderArmV8LeaveAarch64 ON CACHE BOOL "" FORCE)
         set(IMAGE_START_ADDR 0x8000000 CACHE INTERNAL "" FORCE)
     endif()
     if(KernelPlatformSpike AND KernelSel4ArchRiscV32)
@@ -55,6 +62,9 @@ function(ApplyData61ElfLoaderSettings kernel_platform kernel_sel4_arch)
             set(ElfloaderArmV8LeaveAarch64 ON CACHE BOOL "" FORCE)
         endif()
         set(IMAGE_START_ADDR 0x10000000 CACHE INTERNAL "" FORCE)
+    endif()
+    if(KernelPlatformStar64)
+        set(IMAGE_START_ADDR 0x60000000 CACHE INTERNAL "" FORCE)
     endif()
 endfunction()
 
@@ -159,6 +169,8 @@ function(correct_platform_strings)
         # and leave all further setup to the architecture/platform specific
         # configuration to <sel4 kernel>/src/plat/*/config.cmake
         #
+        "-KernelRiscVPlatform"
+        "rocketchip:rocketchip-base,rocketchip-zcu102"
         "-KernelARMPlatform"
         "imx6:sabre,wandq,nitrogen6sx"
         "bcm2837:rpi3"

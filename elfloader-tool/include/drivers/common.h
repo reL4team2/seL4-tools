@@ -26,6 +26,7 @@ enum driver_type {
     DRIVER_INVALID = 0,
     DRIVER_SMP,
     DRIVER_UART,
+    DRIVER_TIMER,
     DRIVER_MAX
 };
 
@@ -33,6 +34,7 @@ struct elfloader_driver {
     const struct dtb_match_table *match_table;
     enum driver_type type;
     driver_init_t init;
+    driver_init_t init_on_secondary_cores;
     /* ops struct, type depends on driver type. */
     const void *ops;
 };

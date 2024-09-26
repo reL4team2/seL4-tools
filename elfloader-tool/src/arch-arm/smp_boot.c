@@ -7,6 +7,7 @@
 #include <autoconf.h>
 #include <elfloader/gen_config.h>
 #include <devices_gen.h>
+#include <drivers.h>
 #include <drivers/smp.h>
 
 #include <printf.h>
@@ -25,8 +26,6 @@ void arm_disable_dcaches(void);
 extern void const *dtb;
 extern uint32_t dtb_size;
 
-WEAK void non_boot_init(void) {}
-
 /* Entry point for all CPUs other than the initial. */
 void non_boot_main(void)
 {
@@ -40,8 +39,11 @@ void non_boot_main(void)
 #endif
     }
 
-    /* Initialise any platform-specific per-core state */
-    non_boot_init();
+    /* Do any driver specific non_boot core init */
+    if (initialise_devices_non_boot()) {
+        printf("ERROR: Did not successfully return from initialise_devices_non_boot()\n");
+        abort();
+    }
 
 #ifndef CONFIG_ARM_HYPERVISOR_SUPPORT
     if (is_hyp_mode()) {

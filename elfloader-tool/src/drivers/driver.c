@@ -33,7 +33,10 @@ static int init_device(struct elfloader_device *dev)
         int ret = table_has_match(dev->compat, drv->match_table);
         if (ret >= 0) {
             dev->drv = drv;
-            drv->init(dev, drv->match_table[ret].match_data);
+            ret = drv->init(dev, drv->match_table[ret].match_data);
+            if (ret) {
+                return ret;
+            }
         }
         drvp++;
     }
@@ -51,5 +54,37 @@ int initialise_devices(void)
         }
     }
 
+    return 0;
+}
+
+static int init_device_non_boot(struct elfloader_device *dev)
+{
+    struct elfloader_driver **drvp = __start__driver_list;
+
+    while (drvp < __stop__driver_list) {
+        struct elfloader_driver *drv = *drvp;
+        if (drv->init_on_secondary_cores) {
+            int ret = table_has_match(dev->compat, drv->match_table);
+            if (ret >= 0) {
+                dev->drv = drv;
+                ret = drv->init_on_secondary_cores(dev, drv->match_table[ret].match_data);
+                if (ret) {
+                    return ret;
+                }
+            }
+        }
+        drvp++;
+    }
+    return 0;
+}
+
+int initialise_devices_non_boot(void)
+{
+    for (unsigned int i = 0; i < ARRAY_SIZE(elfloader_devices); i++) {
+        int ret = init_device_non_boot(&elfloader_devices[i]);
+        if (ret) {
+            return ret;
+        }
+    }
     return 0;
 }
